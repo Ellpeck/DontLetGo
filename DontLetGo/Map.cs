@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Extended.Tiled;
@@ -13,10 +16,12 @@ namespace DontLetGo {
         private readonly IndividualTiledMapRenderer renderer;
         public Vector2 DrawSize => new Vector2(this.map.WidthInPixels, this.map.HeightInPixels);
         public Vector2 TileSize => this.map.GetTileSize();
+        public TiledMapTileset Tileset => this.map.Tilesets[0];
+        public List<Entity> Entities = new List<Entity>();
 
         public Map(TiledMap map, PenumbraComponent penumbra) {
             this.map = map;
-            this.renderer = new IndividualTiledMapRenderer(map);
+            this.renderer = new IndividualTiledMapRenderer(map, (tile, layer, index, position) => 0.5F);
 
             penumbra.Hulls.Clear();
             penumbra.Lights.Clear();
@@ -38,12 +43,30 @@ namespace DontLetGo {
             }
         }
 
+        public TiledMapTile GetTile(int x, int y) {
+            return this.map.GetTile("Ground", x, y);
+        }
+
+        public TiledMapTilesetTile GetTilesetTile(int x, int y) {
+            return this.GetTile(x, y).GetTilesetTile(this.map);
+        }
+
+        public void SetTile(int x, int y, int tile) {
+            var index = this.map.GetTileLayerIndex("Ground");
+            this.map.TileLayers[index].SetTile((ushort) x, (ushort) y, (uint) tile);
+            this.renderer.UpdateDrawInfo(index, x, y);
+        }
+
         public void Update(GameTime time) {
             this.renderer.UpdateAnimations(time);
+            for (var i = this.Entities.Count - 1; i >= 0; i--)
+                this.Entities[i].Update(time);
         }
 
         public void Draw(SpriteBatch batch, GameTime time, RectangleF frustum) {
             this.renderer.Draw(batch, frustum);
+            foreach (var entity in this.Entities)
+                entity.Draw(batch, time);
         }
 
     }

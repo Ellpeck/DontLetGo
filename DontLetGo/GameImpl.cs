@@ -1,3 +1,4 @@
+using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Cameras;
@@ -35,24 +36,25 @@ namespace DontLetGo {
             };
 
             var light = new PointLight {
-                Scale = this.map.TileSize * 6.5F,
-                Intensity = 0.75F
+                ShadowType = ShadowType.Occluded,
+                Scale = this.map.TileSize * 8,
+                Intensity = 0.8F
             };
             this.penumbra.Lights.Add(light);
             this.player = new Player(this.map, light) {
-                Position = new Vector2(9.5F, 18.5F)
+                Position = new Vector2(9, 18)
             };
+            this.map.Entities.Add(this.player);
         }
 
         protected override void DoUpdate(GameTime gameTime) {
             base.DoUpdate(gameTime);
 
-            this.camera.Position = this.player.Position * this.map.TileSize;
+            this.camera.LookingPosition = this.player.Position * this.map.TileSize;
             this.camera.ConstrainWorldBounds(Vector2.Zero, this.map.DrawSize);
             this.penumbra.Transform = this.camera.ViewMatrix;
 
             this.map.Update(gameTime);
-            this.player.Update(gameTime);
         }
 
         protected override void DoDraw(GameTime gameTime) {
@@ -60,9 +62,8 @@ namespace DontLetGo {
 
             this.GraphicsDevice.Clear(ColorExtensions.FromHex(0x161214));
 
-            this.SpriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, null, this.camera.ViewMatrix);
+            this.SpriteBatch.Begin(SpriteSortMode.FrontToBack, null, SamplerState.PointClamp, null, null, null, this.camera.ViewMatrix);
             this.map.Draw(this.SpriteBatch, gameTime, this.camera.GetVisibleRectangle().ToExtended());
-            this.player.Draw(this.SpriteBatch, gameTime);
             this.SpriteBatch.End();
 
             this.penumbra.Draw(gameTime);
