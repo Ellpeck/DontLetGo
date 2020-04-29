@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DontLetGo", "DontLetGo\DontLetGo.csproj", "{C5CE2A26-E14A-4A5B-ACEC-285E1B94ACAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Content", "Content\Content.csproj", "{ACD19B90-FAA2-4B74-AFF0-A5292C35522C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5CE2A26-E14A-4A5B-ACEC-285E1B94ACAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5CE2A26-E14A-4A5B-ACEC-285E1B94ACAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5CE2A26-E14A-4A5B-ACEC-285E1B94ACAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5CE2A26-E14A-4A5B-ACEC-285E1B94ACAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACD19B90-FAA2-4B74-AFF0-A5292C35522C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACD19B90-FAA2-4B74-AFF0-A5292C35522C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACD19B90-FAA2-4B74-AFF0-A5292C35522C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACD19B90-FAA2-4B74-AFF0-A5292C35522C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
