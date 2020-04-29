@@ -36,3 +36,8 @@
 /processor:TiledMapTilesetProcessor
 /build:Tiled/Tileset.tsx
 
+#begin Textures/Player.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/build:Textures/Player.png
+
