@@ -12,25 +12,24 @@ using RectangleF = MonoGame.Extended.RectangleF;
 namespace DontLetGo {
     public class Map {
 
-        private readonly TiledMap map;
         private readonly IndividualTiledMapRenderer renderer;
-        public Vector2 DrawSize => new Vector2(this.map.WidthInPixels, this.map.HeightInPixels);
-        public Vector2 TileSize => this.map.GetTileSize();
-        public TiledMapTileset Tileset => this.map.Tilesets[0];
+        public readonly TiledMap Tiles;
+        public Vector2 DrawSize => new Vector2(this.Tiles.WidthInPixels, this.Tiles.HeightInPixels);
+        public Vector2 TileSize => this.Tiles.GetTileSize();
         public List<Entity> Entities = new List<Entity>();
 
-        public Map(TiledMap map, PenumbraComponent penumbra) {
-            this.map = map;
-            this.renderer = new IndividualTiledMapRenderer(map, (tile, layer, index, position) => 0.5F);
+        public Map(TiledMap tiles, PenumbraComponent penumbra) {
+            this.Tiles = tiles;
+            this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F);
 
             penumbra.Hulls.Clear();
             penumbra.Lights.Clear();
 
-            var tileSize = this.map.GetTileSize();
-            for (var x = 0; x < this.map.Width; x++) {
-                for (var y = 0; y < this.map.Height; y++) {
-                    foreach (var tile in this.map.GetTiles(x, y)) {
-                        foreach (var obj in tile.GetTilesetTile(this.map).Objects) {
+            var tileSize = this.Tiles.GetTileSize();
+            for (var x = 0; x < this.Tiles.Width; x++) {
+                for (var y = 0; y < this.Tiles.Height; y++) {
+                    foreach (var tile in this.Tiles.GetTiles(x, y)) {
+                        foreach (var obj in tile.GetTilesetTile(this.Tiles).Objects) {
                             if (obj.Name == "Hull") {
                                 penumbra.Hulls.Add(new Hull(new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)) {
                                     Position = obj.Position + new Vector2(x, y) * tileSize,
@@ -44,16 +43,12 @@ namespace DontLetGo {
         }
 
         public TiledMapTile GetTile(int x, int y) {
-            return this.map.GetTile("Ground", x, y);
-        }
-
-        public TiledMapTilesetTile GetTilesetTile(int x, int y) {
-            return this.GetTile(x, y).GetTilesetTile(this.map);
+            return this.Tiles.GetTile("Ground", x, y);
         }
 
         public void SetTile(int x, int y, int tile) {
-            var index = this.map.GetTileLayerIndex("Ground");
-            this.map.TileLayers[index].SetTile((ushort) x, (ushort) y, (uint) tile);
+            var index = this.Tiles.GetTileLayerIndex("Ground");
+            this.Tiles.TileLayers[index].SetTile((ushort) x, (ushort) y, (uint) tile);
             this.renderer.UpdateDrawInfo(index, x, y);
         }
 

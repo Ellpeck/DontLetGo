@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="Contentless" Version="2.0.*" />
-        <PackageReference Include="MLEM.Extended" Version="3.3.0" />
+        <PackageReference Include="MLEM.Extended" Version="3.3.0-112" />
         <PackageReference Include="MLEM.Startup" Version="3.3.0" />
         <PackageReference Include="MonoGame.Content.Builder" Version="3.7.*" />
         <PackageReference Include="MonoGame.Extended.Tiled" Version="3.7.0" />

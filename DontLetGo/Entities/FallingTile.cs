@@ -1,17 +1,21 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MLEM.Extended.Tiled;
+using MLEM.Textures;
 using MonoGame.Extended;
 using MonoGame.Extended.Tiled;
 
 namespace DontLetGo.Entities {
     public class FallingTile : Entity {
 
-        private readonly TiledMapTilesetTile tile;
+        private readonly TextureRegion texture;
         private float scale = 1;
 
-        public FallingTile(Map map, TiledMapTilesetTile tile) : base(map) {
-            this.tile = tile;
+        public FallingTile(Map map, TiledMapTile tile) : base(map) {
+            var tilesetTile = tile.GetTilesetTile(map.Tiles);
+            var tileset = tile.GetTileset(map.Tiles);
+            this.texture = new TextureRegion(tileset.Texture, tileset.GetTextureRegion(tilesetTile));
         }
 
         public override void Update(GameTime time) {
@@ -22,10 +26,9 @@ namespace DontLetGo.Entities {
         }
 
         public override void Draw(SpriteBatch batch, GameTime time) {
-            var tileset = this.Map.Tileset;
             var origin = this.Map.TileSize / 2;
-            batch.Draw(tileset.Texture, this.Position * this.Map.TileSize + origin, tileset.GetTileRegion(this.tile.LocalTileIdentifier),
-                Color.White, 1 - this.scale, origin, this.scale, SpriteEffects.None, 0.25F);
+            batch.Draw(this.texture, this.Position * this.Map.TileSize + origin, Color.White,
+                1 - this.scale, origin, this.scale, SpriteEffects.None, 0.25F);
         }
 
     }

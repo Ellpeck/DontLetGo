@@ -45,10 +45,10 @@ namespace DontLetGo.Entities {
                 // we just exited the tile we were on
                 if (this.walkPercentage > 0.5F != next >= 0.5F) {
                     var (x, y) = this.lastPosition.ToPoint();
-                    var currTile = this.Map.GetTilesetTile(x, y);
-                    if (currTile.LocalTileIdentifier == 0) {
+                    var currTile = this.Map.GetTile(x, y);
+                    if (currTile.GlobalIdentifier == 1) {
                         this.Map.SetTile(x, y, 9);
-                    } else if (currTile.LocalTileIdentifier == 8) {
+                    } else if (currTile.GlobalIdentifier == 9) {
                         this.Map.SetTile(x, y, 0);
                         this.Map.Entities.Add(new FallingTile(this.Map, currTile) {Position = this.lastPosition});
                     }
@@ -71,7 +71,7 @@ namespace DontLetGo.Entities {
                     return;
                 }
                 var (nextX, nextY) = this.Position.ToPoint() + this.Direction.Offset();
-                var nextTile = this.Map.GetTilesetTile(nextX, nextY);
+                var nextTile = this.Map.GetTile(nextX, nextY).GetTilesetTile(this.Map.Tiles);
                 if (nextTile == null || !nextTile.Properties.GetBool("Walkable"))
                     return;
                 this.walkPercentage = 1;
