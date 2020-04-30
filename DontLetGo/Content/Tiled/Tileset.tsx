@@ -24,7 +24,14 @@
  <tile id="4">
   <properties>
    <property name="Activator" type="bool" value="true"/>
-   <property name="Light" type="float" value="3.5"/>
+   <property name="ActiveState" type="int" value="6"/>
+   <property name="Light" type="float" value="4"/>
+   <property name="LightColor" type="color" value="#ffff70e5"/>
+  </properties>
+ </tile>
+ <tile id="5">
+  <properties>
+   <property name="Light" type="float" value="2.5"/>
   </properties>
  </tile>
  <tile id="8">

@@ -41,7 +41,7 @@ namespace DontLetGo.Entities {
         public override void Update(GameTime time) {
             this.animation.Update(time);
 
-            this.light.Scale = this.Map.TileSize * (8 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
+            this.light.Scale = this.Map.TileSize * (6 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
             this.light.Position = (this.Position + new Vector2(0.5F)) * this.Map.TileSize;
 
             if (this.walkPercentage > 0) {
@@ -86,19 +86,23 @@ namespace DontLetGo.Entities {
         }
 
         private void OnWalkedOnto(Point pos) {
-            foreach (var tile in this.Map.Tiles.GetTiles(pos.X, pos.Y)) {
+            foreach (var layer in this.Map.Tiles.TileLayers) {
+                var tile = layer.GetTile(pos.X, pos.Y);
                 if (tile.IsBlank)
                     continue;
                 var tilesetTile = tile.GetTilesetTile(this.Map.Tiles);
                 if (tilesetTile.Properties.GetBool("Activator")) {
-                    foreach (var layer in this.Map.Tiles.TileLayers) {
-                        if (layer.Properties.GetBool("Activated"))
+                    foreach (var other in this.Map.Tiles.TileLayers) {
+                        if (other.Properties.GetBool("Activated"))
                             continue;
-                        if (layer.Properties.GetInt("ActivatorX") != pos.X || layer.Properties.GetInt("ActivatorY") != pos.Y)
+                        if (other.Properties.GetInt("ActivatorX") != pos.X || other.Properties.GetInt("ActivatorY") != pos.Y)
                             continue;
-                        CoroutineHandler.Start(this.Map.AddLayerToGround(layer));
-                        layer.Properties["Activated"] = true.ToString();
+                        CoroutineHandler.Start(this.Map.AddLayerToGround(other));
+                        other.Properties["Activated"] = true.ToString();
                     }
+                    var active = tilesetTile.Properties.GetInt("ActiveState");
+                    if (active > 0)
+                        this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
                 }
             }
         }

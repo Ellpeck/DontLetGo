@@ -41,7 +41,7 @@ namespace DontLetGo {
             };
             this.penumbra.Lights.Add(light);
             this.player = new Player(this.map, light) {
-                Position = new Vector2(9, 18)
+                Position = this.map.GetSpawnPoint()
             };
             this.map.Entities.Add(this.player);
         }

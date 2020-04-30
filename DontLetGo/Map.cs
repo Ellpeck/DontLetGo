@@ -22,6 +22,7 @@ namespace DontLetGo {
         public readonly List<Entity> Entities = new List<Entity>();
         public Vector2 DrawSize => new Vector2(this.Tiles.WidthInPixels, this.Tiles.HeightInPixels);
         public Vector2 TileSize => this.Tiles.GetTileSize();
+        private readonly Dictionary<LayerPosition, Light> tileLights = new Dictionary<LayerPosition, Light>();
 
         public Map(TiledMap tiles, PenumbraComponent penumbra) {
             this.Tiles = tiles;
@@ -44,15 +45,19 @@ namespace DontLetGo {
             }
         }
 
-        public TiledMapTile GetTile(int x, int y) {
-            return this.Tiles.GetTile("Ground", x, y);
+        public Vector2 GetSpawnPoint() {
+            return new Vector2(this.Tiles.Properties.GetInt("SpawnX"), this.Tiles.Properties.GetInt("SpawnY"));
         }
 
-        public void SetTile(int x, int y, int tile) {
-            var index = this.Tiles.GetTileLayerIndex("Ground");
+        public TiledMapTile GetTile(int x, int y, string layer = "Ground") {
+            return this.Tiles.GetTile(layer, x, y);
+        }
+
+        public void SetTile(int x, int y, int tile, string layer = "Ground") {
+            var index = this.Tiles.GetTileLayerIndex(layer);
             this.Tiles.TileLayers[index].SetTile((ushort) x, (ushort) y, (uint) tile);
             this.renderer.UpdateDrawInfo(index, x, y);
-            this.OnTileChanged("Ground", x, y);
+            this.OnTileChanged(layer, x, y);
         }
 
         public IEnumerator<IWait> AddLayerToGround(TiledMapTileLayer layer) {
@@ -73,15 +78,22 @@ namespace DontLetGo {
         }
 
         private void OnTileChanged(string layer, int x, int y) {
-            var tile = this.Tiles.GetTile(layer, x, y);
+            var tile = this.GetTile(x, y, layer);
             if (tile.IsBlank)
                 return;
             var tileset = tile.GetTileset(this.Tiles);
             var tilesetTile = tileset.GetTilesetTile(tile, this.Tiles);
 
+            var layerPos = new LayerPosition(layer, x, y);
+            if (this.tileLights.TryGetValue(layerPos, out var lastLight)) {
+                this.Penumbra.Lights.Remove(lastLight);
+                this.tileLights.Remove(layerPos);
+            }
             var light = this.CreateTileLight(x + 0.5F, y + 0.5F, tilesetTile);
-            if (light != null)
+            if (light != null) {
+                this.tileLights.Add(layerPos, light);
                 this.Penumbra.Lights.Add(light);
+            }
 
             foreach (var obj in tilesetTile.Objects) {
                 if (obj.Name == "Hull") {
@@ -97,9 +109,10 @@ namespace DontLetGo {
             var light = tile.Properties.GetFloat("Light");
             if (light <= 0)
                 return null;
+            var color = tile.Properties.ContainsKey("LightColor") ? tile.Properties.GetColor("LightColor") : ColorExtensions.FromHex(0xffec969b);
             return new PointLight {
                 Position = new Vector2(x, y) * this.TileSize,
-                Color = ColorExtensions.FromHex(0xffec969b),
+                Color = color,
                 Scale = light * this.TileSize
             };
         }
