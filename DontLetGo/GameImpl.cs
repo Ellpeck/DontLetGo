@@ -1,21 +1,33 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Coroutine;
 using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Cameras;
 using MLEM.Extended.Extensions;
-using MLEM.Extensions;
 using MLEM.Startup;
+using MLEM.Ui;
+using MLEM.Ui.Elements;
+using MonoGame.Extended;
 using MonoGame.Extended.Tiled;
 using Penumbra;
+using ColorExtensions = MLEM.Extensions.ColorExtensions;
 
 namespace DontLetGo {
     public class GameImpl : MlemGame {
 
+        public static readonly string[] Levels = Enumerable.Range(1, 2).Select(i => "Level" + i).ToArray();
         public static GameImpl Instance { get; private set; }
+        private ContentManager mapContent;
         private Map map;
         private Camera camera;
         private PenumbraComponent penumbra;
         private Player player;
+        private Group fade;
+        private ActiveCoroutine fadeCoroutine;
 
         public GameImpl() {
             Instance = this;
@@ -29,18 +41,44 @@ namespace DontLetGo {
             };
             this.penumbra.Initialize();
 
-            this.map = new Map(LoadContent<TiledMap>("Tiled/Level2"), this.penumbra);
+            this.mapContent = new ContentManager(this.Services, this.Content.RootDirectory);
             this.camera = new Camera(this.GraphicsDevice) {
                 AutoScaleWithScreen = true,
                 Scale = 4
             };
-
-            var light = new PointLight {
-                ShadowType = ShadowType.Occluded,
-                Intensity = 0.8F
+            this.fade = new Group(Anchor.TopLeft, Vector2.One, false) {
+                OnDrawn = (e, time, batch, alpha) => {
+                    batch.FillRectangle(e.DisplayArea.ToExtended(), Color.Black * alpha);
+                }
             };
-            this.penumbra.Lights.Add(light);
-            this.player = new Player(this.map, light) {
+            this.UiSystem.Add("Fade", this.fade).Priority = 10;
+
+            this.SetMap(Levels[0]);
+            this.Fade(0.01F);
+        }
+
+        public void Fade(float speed, Action<GameImpl> afterFade = null) {
+            IEnumerator<IWait> FadeImpl() {
+                var fadingIn = this.fade.DrawAlpha >= 0.5F;
+                if (fadingIn)
+                    speed *= -1;
+                while (fadingIn ? this.fade.DrawAlpha > 0 : this.fade.DrawAlpha < 1) {
+                    this.fade.DrawAlpha += speed;
+                    yield return new WaitEvent(CoroutineEvents.Update);
+                }
+                afterFade?.Invoke(this);
+            }
+
+            this.fadeCoroutine = CoroutineHandler.Start(FadeImpl());
+        }
+
+        public void SetMap(string name) {
+            this.penumbra.Hulls.Clear();
+            this.penumbra.Lights.Clear();
+
+            this.mapContent.Unload();
+            this.map = new Map(name, this.mapContent.Load<TiledMap>("Tiled/" + name), this.penumbra);
+            this.player = new Player(this.map) {
                 Position = this.map.GetSpawnPoint()
             };
             this.map.Entities.Add(this.player);
@@ -53,7 +91,8 @@ namespace DontLetGo {
             this.camera.ConstrainWorldBounds(Vector2.Zero, this.map.DrawSize);
             this.penumbra.Transform = this.camera.ViewMatrix;
 
-            this.map.Update(gameTime);
+            if (this.fadeCoroutine == null || this.fadeCoroutine.IsFinished)
+                this.map.Update(gameTime);
         }
 
         protected override void DoDraw(GameTime gameTime) {

@@ -15,22 +15,21 @@ using RectangleF = MonoGame.Extended.RectangleF;
 namespace DontLetGo {
     public class Map {
 
-        private readonly Random random = new Random();
-        private readonly IndividualTiledMapRenderer renderer;
         public readonly TiledMap Tiles;
         public readonly PenumbraComponent Penumbra;
         public readonly List<Entity> Entities = new List<Entity>();
+        public readonly string Name;
         public Vector2 DrawSize => new Vector2(this.Tiles.WidthInPixels, this.Tiles.HeightInPixels);
         public Vector2 TileSize => this.Tiles.GetTileSize();
         private readonly Dictionary<LayerPosition, Light> tileLights = new Dictionary<LayerPosition, Light>();
+        private readonly Random random = new Random();
+        private readonly IndividualTiledMapRenderer renderer;
 
-        public Map(TiledMap tiles, PenumbraComponent penumbra) {
+        public Map(string name, TiledMap tiles, PenumbraComponent penumbra) {
             this.Tiles = tiles;
             this.Penumbra = penumbra;
+            this.Name = name;
             this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F + 0.001F * index);
-
-            penumbra.Hulls.Clear();
-            penumbra.Lights.Clear();
 
             foreach (var layer in this.Tiles.TileLayers) {
                 if (layer.Properties.ContainsKey("Activated"))

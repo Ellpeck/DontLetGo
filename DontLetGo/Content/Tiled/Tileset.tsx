@@ -18,6 +18,7 @@
  </tile>
  <tile id="3">
   <properties>
+   <property name="Goal" type="bool" value="true"/>
    <property name="Light" type="float" value="6"/>
   </properties>
  </tile>

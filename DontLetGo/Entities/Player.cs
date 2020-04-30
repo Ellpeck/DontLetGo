@@ -23,8 +23,12 @@ namespace DontLetGo.Entities {
         private Vector2 lastPosition;
         private float walkPercentage;
 
-        public Player(Map map, Light light) : base(map) {
-            this.light = light;
+        public Player(Map map) : base(map) {
+            this.light = new PointLight {
+                ShadowType = ShadowType.Occluded,
+                Intensity = 0.8F
+            };
+            map.Penumbra.Lights.Add(this.light);
 
             var tex = new UniformTextureAtlas(MlemGame.LoadContent<Texture2D>("Textures/Player"), 4, 4);
             this.animation = new SpriteAnimationGroup();
@@ -39,10 +43,13 @@ namespace DontLetGo.Entities {
         }
 
         public override void Update(GameTime time) {
-            this.animation.Update(time);
-
-            this.light.Scale = this.Map.TileSize * (6 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
-            this.light.Position = (this.Position + new Vector2(0.5F)) * this.Map.TileSize;
+            if (MlemGame.Input.IsKeyPressed(Keys.R)) {
+                GameImpl.Instance.Fade(0.01F, g => {
+                    g.SetMap(this.Map.Name);
+                    g.Fade(0.01F);
+                });
+                return;
+            }
 
             if (this.walkPercentage > 0) {
                 var next = Math.Max(0, this.walkPercentage - time.GetElapsedSeconds() * 2.5F);
@@ -103,11 +110,24 @@ namespace DontLetGo.Entities {
                     var active = tilesetTile.Properties.GetInt("ActiveState");
                     if (active > 0)
                         this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
+                } else if (tilesetTile.Properties.GetBool("Goal")) {
+                    this.Direction = Direction2.Down;
+                    var nextLevel = Array.IndexOf(GameImpl.Levels, this.Map.Name) + 1;
+                    if (GameImpl.Levels.Length > nextLevel) {
+                        GameImpl.Instance.Fade(0.005F, g => {
+                            g.SetMap(GameImpl.Levels[nextLevel]);
+                            GameImpl.Instance.Fade(0.01F);
+                        });
+                    }
                 }
             }
         }
 
         public override void Draw(SpriteBatch batch, GameTime time) {
+            this.light.Scale = this.Map.TileSize * (6 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
+            this.light.Position = (this.Position + new Vector2(0.5F)) * this.Map.TileSize;
+
+            this.animation.Update(time);
             batch.Draw(this.animation.CurrentRegion, (this.Position + new Vector2(0, -0.2F)) * this.Map.TileSize, Color.White,
                 0, Vector2.Zero, 1, SpriteEffects.None, 0.75F);
         }
