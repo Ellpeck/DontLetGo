@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Coroutine;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -44,19 +46,12 @@ namespace DontLetGo.Entities {
 
             if (this.walkPercentage > 0) {
                 var next = Math.Max(0, this.walkPercentage - time.GetElapsedSeconds() * 2.5F);
-                // we just exited the tile we were on
-                if (this.walkPercentage > 0.5F != next >= 0.5F) {
-                    var (x, y) = this.lastPosition.ToPoint();
-                    var currTile = this.Map.GetTile(x, y);
-                    if (currTile.GlobalIdentifier == 1) {
-                        this.Map.SetTile(x, y, 9);
-                    } else if (currTile.GlobalIdentifier == 9) {
-                        this.Map.SetTile(x, y, 0);
-                        this.Map.Entities.Add(new FallingTile(this.Map, currTile) {Position = this.lastPosition});
-                    }
-                }
+                if (this.walkPercentage > 0.5F != next >= 0.5F)
+                    this.OnWalkedOffOf(this.lastPosition.ToPoint());
                 this.walkPercentage = next;
                 this.Position = Vector2.Lerp(this.lastPosition, this.lastPosition + this.Direction.Offset().ToVector2(), 1 - this.walkPercentage);
+                if (this.walkPercentage <= 0)
+                    this.OnWalkedOnto(this.Position.ToPoint());
             }
 
             if (this.walkPercentage <= 0) {
@@ -77,6 +72,34 @@ namespace DontLetGo.Entities {
                 if (nextTile == null || !nextTile.Properties.GetBool("Walkable"))
                     return;
                 this.walkPercentage = 1;
+            }
+        }
+
+        private void OnWalkedOffOf(Point pos) {
+            var currTile = this.Map.GetTile(pos.X, pos.Y);
+            if (currTile.GlobalIdentifier == 1) {
+                this.Map.SetTile(pos.X, pos.Y, 9);
+            } else if (currTile.GlobalIdentifier == 9) {
+                this.Map.SetTile(pos.X, pos.Y, 0);
+                this.Map.Entities.Add(new FallingTile(this.Map, currTile) {Position = pos.ToVector2()});
+            }
+        }
+
+        private void OnWalkedOnto(Point pos) {
+            foreach (var tile in this.Map.Tiles.GetTiles(pos.X, pos.Y)) {
+                if (tile.IsBlank)
+                    continue;
+                var tilesetTile = tile.GetTilesetTile(this.Map.Tiles);
+                if (tilesetTile.Properties.GetBool("Activator")) {
+                    foreach (var layer in this.Map.Tiles.TileLayers) {
+                        if (layer.Properties.GetBool("Activated"))
+                            continue;
+                        if (layer.Properties.GetInt("ActivatorX") != pos.X || layer.Properties.GetInt("ActivatorY") != pos.Y)
+                            continue;
+                        CoroutineHandler.Start(this.Map.AddLayerToGround(layer));
+                        layer.Properties["Activated"] = true.ToString();
+                    }
+                }
             }
         }
 

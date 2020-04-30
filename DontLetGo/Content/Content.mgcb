@@ -41,3 +41,8 @@
 /processor:TextureProcessor
 /build:Textures/Player.png
 
+#begin Tiled/Level2.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:Tiled/Level2.tmx
+

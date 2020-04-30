@@ -16,8 +16,25 @@
    <property name="Walkable" type="bool" value="true"/>
   </properties>
  </tile>
+ <tile id="3">
+  <properties>
+   <property name="Light" type="float" value="6"/>
+  </properties>
+ </tile>
+ <tile id="4">
+  <properties>
+   <property name="Activator" type="bool" value="true"/>
+   <property name="Light" type="float" value="3.5"/>
+  </properties>
+ </tile>
  <tile id="8">
   <properties>
+   <property name="Walkable" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="16">
+  <properties>
+   <property name="Light" type="float" value="1.5"/>
    <property name="Walkable" type="bool" value="true"/>
   </properties>
  </tile>

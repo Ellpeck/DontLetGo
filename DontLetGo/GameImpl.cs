@@ -29,7 +29,7 @@ namespace DontLetGo {
             };
             this.penumbra.Initialize();
 
-            this.map = new Map(LoadContent<TiledMap>("Tiled/Level1"), this.penumbra);
+            this.map = new Map(LoadContent<TiledMap>("Tiled/Level2"), this.penumbra);
             this.camera = new Camera(this.GraphicsDevice) {
                 AutoScaleWithScreen = true,
                 Scale = 4
