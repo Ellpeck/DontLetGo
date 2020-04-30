@@ -5,6 +5,7 @@ using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Extended.Tiled;
+using MLEM.Extensions;
 using MonoGame.Extended.Tiled;
 using Penumbra;
 using RectangleF = MonoGame.Extended.RectangleF;
@@ -14,13 +15,13 @@ namespace DontLetGo {
 
         private readonly IndividualTiledMapRenderer renderer;
         public readonly TiledMap Tiles;
+        public readonly List<Entity> Entities = new List<Entity>();
         public Vector2 DrawSize => new Vector2(this.Tiles.WidthInPixels, this.Tiles.HeightInPixels);
         public Vector2 TileSize => this.Tiles.GetTileSize();
-        public List<Entity> Entities = new List<Entity>();
 
         public Map(TiledMap tiles, PenumbraComponent penumbra) {
             this.Tiles = tiles;
-            this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F);
+            this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F + 0.001F * index);
 
             penumbra.Hulls.Clear();
             penumbra.Lights.Clear();
@@ -29,7 +30,15 @@ namespace DontLetGo {
             for (var x = 0; x < this.Tiles.Width; x++) {
                 for (var y = 0; y < this.Tiles.Height; y++) {
                     foreach (var tile in this.Tiles.GetTiles(x, y)) {
-                        foreach (var obj in tile.GetTilesetTile(this.Tiles).Objects) {
+                        var tileset = tile.GetTileset(this.Tiles);
+                        if (tile.GlobalIdentifier == 4) {
+                            penumbra.Lights.Add(new PointLight {
+                                Position = new Vector2(x + 0.5F, y + 0.5F) * tileSize,
+                                Color = ColorExtensions.FromHex(0xffec969b),
+                                Scale = tileSize * 6
+                            });
+                        }
+                        foreach (var obj in tileset.GetTilesetTile(tile, this.Tiles).Objects) {
                             if (obj.Name == "Hull") {
                                 penumbra.Hulls.Add(new Hull(new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1)) {
                                     Position = obj.Position + new Vector2(x, y) * tileSize,

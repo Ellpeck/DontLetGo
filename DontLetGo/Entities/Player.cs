@@ -38,6 +38,8 @@ namespace DontLetGo.Entities {
 
         public override void Update(GameTime time) {
             this.animation.Update(time);
+
+            this.light.Scale = this.Map.TileSize * (8 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
             this.light.Position = (this.Position + new Vector2(0.5F)) * this.Map.TileSize;
 
             if (this.walkPercentage > 0) {

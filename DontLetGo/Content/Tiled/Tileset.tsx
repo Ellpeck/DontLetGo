@@ -11,6 +11,11 @@
    <object id="2" name="Hull" x="0" y="0" width="16" height="16"/>
   </objectgroup>
  </tile>
+ <tile id="2">
+  <properties>
+   <property name="Walkable" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="8">
   <properties>
    <property name="Walkable" type="bool" value="true"/>

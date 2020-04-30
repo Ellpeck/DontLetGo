@@ -37,7 +37,6 @@ namespace DontLetGo {
 
             var light = new PointLight {
                 ShadowType = ShadowType.Occluded,
-                Scale = this.map.TileSize * 8,
                 Intensity = 0.8F
             };
             this.penumbra.Lights.Add(light);
