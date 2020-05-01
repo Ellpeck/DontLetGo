@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Coroutine;
@@ -32,9 +33,16 @@ namespace DontLetGo {
             this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F + 0.001F * index);
 
             foreach (var layer in this.Tiles.TileLayers) {
+                if (layer.Properties.GetBool("StepGrid")) {
+                    layer.IsVisible = false;
+                    foreach (var tile in layer.Tiles.Where(t => !t.IsBlank))
+                        this.SetTile(tile.X, tile.Y, (int) tile.GlobalTileIdentifierWithFlags);
+                    continue;
+                }
+
                 if (layer.Properties.ContainsKey("Activated"))
                     layer.IsVisible = layer.Properties.GetBool("Activated");
-
+                
                 if (layer.IsVisible) {
                     for (var x = 0; x < this.Tiles.Width; x++) {
                         for (var y = 0; y < this.Tiles.Height; y++)
@@ -60,19 +68,11 @@ namespace DontLetGo {
         }
 
         public IEnumerator<IWait> AddLayerToGround(TiledMapTileLayer layer) {
-            var tiles = new List<(ushort, ushort, uint)>();
-            for (ushort x = 0; x < this.Tiles.Width; x++) {
-                for (ushort y = 0; y < this.Tiles.Height; y++) {
-                    var tile = layer.GetTile(x, y);
-                    if (tile.IsBlank)
-                        continue;
-                    tiles.Add((x, y, tile.GlobalTileIdentifierWithFlags));
-                }
-            }
+            var tiles = layer.Tiles.Where(t => !t.IsBlank).ToList();
             tiles.Shuffle(this.random);
-            foreach (var (x, y, tile) in tiles) {
+            foreach (var tile in tiles) {
                 yield return new WaitSeconds(0.15F);
-                this.Entities.Add(new SpawningTile(this, new TiledMapTile(tile, x, y), new Vector2(x, y)));
+                this.Entities.Add(new SpawningTile(this, tile, new Vector2(tile.X, tile.Y)));
             }
         }
 

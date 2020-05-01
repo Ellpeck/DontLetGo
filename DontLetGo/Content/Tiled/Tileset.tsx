@@ -35,6 +35,17 @@
    <property name="Light" type="float" value="2.5"/>
   </properties>
  </tile>
+ <tile id="6">
+  <properties>
+   <property name="Walkable" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="7">
+  <properties>
+   <property name="Light" type="float" value="1.25"/>
+   <property name="Walkable" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="8">
   <properties>
    <property name="Walkable" type="bool" value="true"/>

@@ -98,6 +98,8 @@ namespace DontLetGo.Entities {
                 if (tile.IsBlank)
                     continue;
                 var tilesetTile = tile.GetTilesetTile(this.Map.Tiles);
+
+                // buttons
                 if (tilesetTile.Properties.GetBool("Activator")) {
                     foreach (var other in this.Map.Tiles.TileLayers) {
                         if (other.Properties.GetBool("Activated"))
@@ -106,11 +108,16 @@ namespace DontLetGo.Entities {
                             continue;
                         CoroutineHandler.Start(this.Map.AddLayerToGround(other));
                         other.Properties["Activated"] = true.ToString();
+                        break;
                     }
                     var active = tilesetTile.Properties.GetInt("ActiveState");
                     if (active > 0)
                         this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
-                } else if (tilesetTile.Properties.GetBool("Goal")) {
+                    continue;
+                }
+
+                // bed
+                if (tilesetTile.Properties.GetBool("Goal")) {
                     this.Direction = Direction2.Down;
                     var nextLevel = Array.IndexOf(GameImpl.Levels, this.Map.Name) + 1;
                     if (GameImpl.Levels.Length > nextLevel) {
@@ -118,6 +125,37 @@ namespace DontLetGo.Entities {
                             g.SetMap(GameImpl.Levels[nextLevel]);
                             GameImpl.Instance.Fade(0.01F);
                         });
+                    }
+                    continue;
+                }
+
+                // step grid tiles
+                var steppedOnOff = tile.GlobalIdentifier == 7;
+                if (steppedOnOff || tile.GlobalIdentifier == 8) {
+                    var grid = this.Map.Tiles.TileLayers.First(t => t.Properties.GetBool("StepGrid") && !t.GetTile(pos.X, pos.Y).IsBlank);
+                    if (grid != layer) {
+                        var missing = grid.Tiles.Count(t => !t.IsBlank && this.Map.GetTile(t.X, t.Y).GlobalIdentifier != 8);
+                        // only change tiles if the grid isn't complete
+                        if (missing > 0) {
+                            // if we stepped on a disabled tile, turn it on
+                            if (steppedOnOff) {
+                                this.Map.SetTile(pos.X, pos.Y, 8);
+                            } else {
+                                // otherwise, turn the whole grid off
+                                foreach (var t in grid.Tiles.Where(t => !t.IsBlank))
+                                    this.Map.SetTile(t.X, t.Y, (int) t.GlobalTileIdentifierWithFlags);
+                            }
+                        }
+                        // if there's only one missing and we just switched on, we're done
+                        if (missing == 1 && steppedOnOff) {
+                            foreach (var other in this.Map.Tiles.TileLayers) {
+                                if (other.Properties.Get("ActivatorGrid") != grid.Name)
+                                    continue;
+                                CoroutineHandler.Start(this.Map.AddLayerToGround(other));
+                                other.Properties["Activated"] = true.ToString();
+                                break;
+                            }
+                        }
                     }
                 }
             }

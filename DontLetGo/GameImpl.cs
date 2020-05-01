@@ -19,7 +19,7 @@ using ColorExtensions = MLEM.Extensions.ColorExtensions;
 namespace DontLetGo {
     public class GameImpl : MlemGame {
 
-        public static readonly string[] Levels = Enumerable.Range(1, 2).Select(i => "Level" + i).ToArray();
+        public static readonly string[] Levels = Enumerable.Range(1, 3).Select(i => "Level" + i).ToArray();
         public static GameImpl Instance { get; private set; }
         private ContentManager mapContent;
         private Map map;
@@ -53,7 +53,7 @@ namespace DontLetGo {
             };
             this.UiSystem.Add("Fade", this.fade).Priority = 10;
 
-            this.SetMap(Levels[0]);
+            this.SetMap(Levels[2]);
             this.Fade(0.01F);
         }
 
