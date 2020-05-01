@@ -62,7 +62,7 @@ namespace DontLetGo {
             this.caption = new Group(Anchor.Center, Vector2.One);
             this.UiSystem.Add("Caption", this.caption).Priority = 20;
 
-            this.StartMap(Levels[3], g => g.Fade(0.01F));
+            this.StartMap(Levels[0], g => g.Fade(0.01F));
         }
 
         public void Fade(float speed, Action<GameImpl> afterFade = null) {
