@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Coroutine;
 using Microsoft.Xna.Framework;
@@ -22,6 +23,7 @@ namespace DontLetGo.Entities {
 
         private Vector2 lastPosition;
         private float walkPercentage;
+        private readonly List<ActiveCoroutine> activationCutscenes = new List<ActiveCoroutine>();
 
         public Player(Map map) : base(map) {
             this.light = new PointLight {
@@ -71,6 +73,11 @@ namespace DontLetGo.Entities {
                     this.Direction = Direction2.Left;
                 } else if (MlemGame.Input.IsKeyDown(Keys.Right)) {
                     this.Direction = Direction2.Right;
+                } else if (MlemGame.Input.IsKeyDown(Keys.Space)) {
+                    this.activationCutscenes.RemoveAll(c => c.IsFinished);
+                    if (this.activationCutscenes.Count <= 0)
+                        this.OnActivated(this.Position.ToPoint() + this.Direction.Offset());
+                    return;
                 } else {
                     return;
                 }
@@ -82,13 +89,37 @@ namespace DontLetGo.Entities {
             }
         }
 
+        private void OnActivated(Point pos) {
+            foreach (var layer in this.Map.Tiles.TileLayers) {
+                var tile = layer.GetTile(pos.X, pos.Y);
+                if (tile.IsBlank)
+                    continue;
+                var tilesetTile = tile.GetTilesetTile(this.Map.Tiles);
+
+                // switches
+                if (tilesetTile.Properties.GetBool("Switch")) {
+                    foreach (var other in this.Map.Tiles.TileLayers) {
+                        if (other.Properties.GetInt("ActivatorX") != pos.X || other.Properties.GetInt("ActivatorY") != pos.Y)
+                            continue;
+                        var activated = other.Properties.GetBool("Activated");
+                        var co = activated ? this.Map.RemoveLayerFromGround(other) : this.Map.AddLayerToGround(other);
+                        this.activationCutscenes.Add(CoroutineHandler.Start(co));
+                        other.Properties["Activated"] = (!activated).ToString();
+                    }
+                    var active = tilesetTile.Properties.GetInt("ActiveState");
+                    if (active > 0)
+                        this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
+                }
+            }
+        }
+
         private void OnWalkedOffOf(Point pos) {
             var currTile = this.Map.GetTile(pos.X, pos.Y);
             if (currTile.GlobalIdentifier == 1) {
                 this.Map.SetTile(pos.X, pos.Y, 9);
             } else if (currTile.GlobalIdentifier == 9) {
                 this.Map.SetTile(pos.X, pos.Y, 0);
-                this.Map.Entities.Add(new FallingTile(this.Map, currTile) {Position = pos.ToVector2()});
+                this.Map.Entities.Add(new FallingTile(this.Map, currTile, pos.ToVector2()));
             }
         }
 

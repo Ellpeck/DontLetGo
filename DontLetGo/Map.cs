@@ -35,16 +35,21 @@ namespace DontLetGo {
             this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F + 0.001F * index);
 
             foreach (var layer in this.Tiles.TileLayers) {
+                var copy = false;
                 if (layer.Properties.GetBool("StepGrid")) {
                     layer.IsVisible = false;
-                    foreach (var tile in layer.Tiles.Where(t => !t.IsBlank))
-                        this.SetTile(tile.X, tile.Y, (int) tile.GlobalTileIdentifierWithFlags);
-                    continue;
+                    copy = true;
+                }
+                if (layer.Properties.ContainsKey("Activated")) {
+                    layer.IsVisible = false;
+                    if (layer.Properties.GetBool("Activated"))
+                        copy = true;
                 }
 
-                if (layer.Properties.ContainsKey("Activated"))
-                    layer.IsVisible = layer.Properties.GetBool("Activated");
-
+                if (copy) {
+                    foreach (var tile in layer.Tiles.Where(t => !t.IsBlank))
+                        this.SetTile(tile.X, tile.Y, (int) tile.GlobalTileIdentifierWithFlags);
+                }
                 if (layer.IsVisible) {
                     for (var x = 0; x < this.Tiles.Width; x++) {
                         for (var y = 0; y < this.Tiles.Height; y++)
@@ -78,18 +83,29 @@ namespace DontLetGo {
             }
         }
 
+        public IEnumerator<IWait> RemoveLayerFromGround(TiledMapTileLayer layer) {
+            var tiles = layer.Tiles.Where(t => !t.IsBlank).ToList();
+            tiles.Shuffle(this.random);
+            foreach (var tile in tiles) {
+                yield return new WaitSeconds(0.15F);
+                this.SetTile(tile.X, tile.Y, 0);
+                this.Entities.Add(new FallingTile(this, tile, new Vector2(tile.X, tile.Y)));
+            }
+        }
+
         private void OnTileChanged(string layer, int x, int y) {
+            var layerPos = new LayerPosition(layer, x, y);
+            if (this.tileLights.TryGetValue(layerPos, out var lastLight)) {
+                this.Penumbra.Lights.Remove(lastLight);
+                this.tileLights.Remove(layerPos);
+            }
+
             var tile = this.GetTile(x, y, layer);
             if (tile.IsBlank)
                 return;
             var tileset = tile.GetTileset(this.Tiles);
             var tilesetTile = tileset.GetTilesetTile(tile, this.Tiles);
 
-            var layerPos = new LayerPosition(layer, x, y);
-            if (this.tileLights.TryGetValue(layerPos, out var lastLight)) {
-                this.Penumbra.Lights.Remove(lastLight);
-                this.tileLights.Remove(layerPos);
-            }
             var light = this.CreateTileLight(x + 0.5F, y + 0.5F, tilesetTile);
             if (light != null) {
                 this.tileLights.Add(layerPos, light);

@@ -51,6 +51,22 @@
    <property name="Walkable" type="bool" value="true"/>
   </properties>
  </tile>
+ <tile id="12">
+  <properties>
+   <property name="ActiveState" type="int" value="14"/>
+   <property name="Light" type="float" value="4"/>
+   <property name="LightColor" type="color" value="#ffff70e5"/>
+   <property name="Switch" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="13">
+  <properties>
+   <property name="ActiveState" type="int" value="13"/>
+   <property name="Light" type="float" value="4"/>
+   <property name="LightColor" type="color" value="#ffffbc6f"/>
+   <property name="Switch" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="16">
   <properties>
    <property name="Light" type="float" value="1.5"/>
