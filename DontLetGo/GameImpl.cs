@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Cameras;
 using MLEM.Extended.Extensions;
+using MLEM.Font;
 using MLEM.Startup;
 using MLEM.Ui;
 using MLEM.Ui.Elements;
@@ -27,7 +28,8 @@ namespace DontLetGo {
         private PenumbraComponent penumbra;
         private Player player;
         private Group fade;
-        private ActiveCoroutine fadeCoroutine;
+        private Group caption;
+        private ActiveCoroutine cutscene;
 
         public GameImpl() {
             Instance = this;
@@ -46,15 +48,21 @@ namespace DontLetGo {
                 AutoScaleWithScreen = true,
                 Scale = 4
             };
+
+            this.UiSystem.AutoScaleWithScreen = true;
+            this.UiSystem.Style.Font = new GenericSpriteFont(LoadContent<SpriteFont>("Fonts/Font"));
+            this.UiSystem.Style.TextScale = 0.3F;
+
             this.fade = new Group(Anchor.TopLeft, Vector2.One, false) {
                 OnDrawn = (e, time, batch, alpha) => {
                     batch.FillRectangle(e.DisplayArea.ToExtended(), Color.Black * alpha);
                 }
             };
             this.UiSystem.Add("Fade", this.fade).Priority = 10;
+            this.caption = new Group(Anchor.Center, Vector2.One);
+            this.UiSystem.Add("Caption", this.caption).Priority = 20;
 
-            this.SetMap(Levels[2]);
-            this.Fade(0.01F);
+            this.StartMap(Levels[0], g => g.Fade(0.01F));
         }
 
         public void Fade(float speed, Action<GameImpl> afterFade = null) {
@@ -69,7 +77,39 @@ namespace DontLetGo {
                 afterFade?.Invoke(this);
             }
 
-            this.fadeCoroutine = CoroutineHandler.Start(FadeImpl());
+            this.cutscene = CoroutineHandler.Start(FadeImpl());
+        }
+
+        private void DisplayCaption(string[] text, Action<GameImpl> afterDisplay = null) {
+            IEnumerator<IWait> CaptionImpl() {
+                foreach (var par in text) {
+                    this.caption.RemoveChildren();
+                    var lines = par.Split("\n");
+                    var paragraphs = new Paragraph[lines.Length];
+                    for (var i = 0; i < lines.Length; i++)
+                        paragraphs[i] = this.caption.AddChild(new Paragraph(Anchor.AutoCenter, 1, lines[i], true));
+
+                    this.caption.DrawAlpha = 0;
+                    while (this.caption.DrawAlpha < 1) {
+                        this.caption.DrawAlpha += 0.01F;
+                        yield return new WaitEvent(CoroutineEvents.Update);
+                    }
+                    yield return new WaitSeconds(3);
+                    while (this.caption.DrawAlpha > 0) {
+                        this.caption.DrawAlpha -= 0.01F;
+                        yield return new WaitEvent(CoroutineEvents.Update);
+                    }
+                    yield return new WaitSeconds(1);
+                }
+                afterDisplay?.Invoke(this);
+            }
+
+            this.cutscene = CoroutineHandler.Start(CaptionImpl());
+        }
+
+        public void StartMap(string name, Action<GameImpl> finished = null) {
+            this.SetMap(name);
+            this.DisplayCaption(this.map.Caption, g => finished?.Invoke(g));
         }
 
         public void SetMap(string name) {
@@ -91,7 +131,7 @@ namespace DontLetGo {
             this.camera.ConstrainWorldBounds(Vector2.Zero, this.map.DrawSize);
             this.penumbra.Transform = this.camera.ViewMatrix;
 
-            if (this.fadeCoroutine == null || this.fadeCoroutine.IsFinished)
+            if (this.cutscene == null || this.cutscene.IsFinished)
                 this.map.Update(gameTime);
         }
 

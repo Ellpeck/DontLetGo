@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.2" tiledversion="1.3.4" orientation="orthogonal" renderorder="right-down" width="20" height="20" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="1">
  <properties>
+  <property name="Caption" value="Sometimes,|I have the strangest dreams.;Some days,|there's only darkness in me."/>
   <property name="SpawnX" type="int" value="10"/>
   <property name="SpawnY" type="int" value="18"/>
  </properties>

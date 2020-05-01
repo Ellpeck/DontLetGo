@@ -51,3 +51,8 @@
 /processor:TiledMapProcessor
 /build:Tiled/Level3.tmx
 
+#begin Fonts/Font.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/build:Fonts/Font.spritefont
+

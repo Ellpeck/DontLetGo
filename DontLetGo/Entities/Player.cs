@@ -122,8 +122,7 @@ namespace DontLetGo.Entities {
                     var nextLevel = Array.IndexOf(GameImpl.Levels, this.Map.Name) + 1;
                     if (GameImpl.Levels.Length > nextLevel) {
                         GameImpl.Instance.Fade(0.005F, g => {
-                            g.SetMap(GameImpl.Levels[nextLevel]);
-                            GameImpl.Instance.Fade(0.01F);
+                            g.StartMap(GameImpl.Levels[nextLevel], g2 => g2.Fade(0.01F));
                         });
                     }
                     continue;

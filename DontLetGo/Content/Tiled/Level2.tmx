@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.2" tiledversion="1.3.4" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="1">
  <properties>
+  <property name="Caption" value="Sometimes, I have to try so hard|to find a tiny light;There has to be a way|to turn it on.;Where is it?"/>
   <property name="SpawnX" type="int" value="9"/>
   <property name="SpawnY" type="int" value="23"/>
  </properties>

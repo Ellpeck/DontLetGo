@@ -20,6 +20,7 @@ namespace DontLetGo {
         public readonly PenumbraComponent Penumbra;
         public readonly List<Entity> Entities = new List<Entity>();
         public readonly string Name;
+        public readonly string[] Caption;
         public Vector2 DrawSize => new Vector2(this.Tiles.WidthInPixels, this.Tiles.HeightInPixels);
         public Vector2 TileSize => this.Tiles.GetTileSize();
         private readonly Dictionary<LayerPosition, Light> tileLights = new Dictionary<LayerPosition, Light>();
@@ -30,6 +31,7 @@ namespace DontLetGo {
             this.Tiles = tiles;
             this.Penumbra = penumbra;
             this.Name = name;
+            this.Caption = tiles.Properties.Get("Caption")?.Replace("|", "\n").Split(";");
             this.renderer = new IndividualTiledMapRenderer(tiles, (tile, layer, index, position) => 0.5F + 0.001F * index);
 
             foreach (var layer in this.Tiles.TileLayers) {
@@ -42,7 +44,7 @@ namespace DontLetGo {
 
                 if (layer.Properties.ContainsKey("Activated"))
                     layer.IsVisible = layer.Properties.GetBool("Activated");
-                
+
                 if (layer.IsVisible) {
                     for (var x = 0; x < this.Tiles.Width; x++) {
                         for (var y = 0; y < this.Tiles.Height; y++)
