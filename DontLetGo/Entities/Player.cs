@@ -47,7 +47,7 @@ namespace DontLetGo.Entities {
         }
 
         public override void Update(GameTime time) {
-            if (MlemGame.Input.IsKeyPressed(Keys.R)) {
+            if (MlemGame.Input.IsAnyPressed(Keys.R, Buttons.Start)) {
                 GameImpl.Instance.Fade(0.01F, g => {
                     g.SetMap(this.Map.Name);
                     g.Fade(0.01F);
@@ -67,15 +67,15 @@ namespace DontLetGo.Entities {
 
             if (this.walkPercentage <= 0) {
                 this.lastPosition = this.Position;
-                if (MlemGame.Input.IsKeyDown(Keys.Up)) {
+                if (MlemGame.Input.IsAnyDown(Keys.Up, Buttons.DPadUp, Buttons.LeftThumbstickUp)) {
                     this.Direction = Direction2.Up;
-                } else if (MlemGame.Input.IsKeyDown(Keys.Down)) {
+                } else if (MlemGame.Input.IsAnyDown(Keys.Down, Buttons.DPadDown, Buttons.LeftThumbstickDown)) {
                     this.Direction = Direction2.Down;
-                } else if (MlemGame.Input.IsKeyDown(Keys.Left)) {
+                } else if (MlemGame.Input.IsAnyDown(Keys.Left, Buttons.DPadLeft, Buttons.LeftThumbstickLeft)) {
                     this.Direction = Direction2.Left;
-                } else if (MlemGame.Input.IsKeyDown(Keys.Right)) {
+                } else if (MlemGame.Input.IsAnyDown(Keys.Right, Buttons.DPadRight, Buttons.LeftThumbstickRight)) {
                     this.Direction = Direction2.Right;
-                } else if (MlemGame.Input.IsKeyDown(Keys.Space)) {
+                } else if (MlemGame.Input.IsAnyDown(Keys.Space, Buttons.A)) {
                     this.activationCutscenes.RemoveAll(c => c.IsFinished);
                     if (this.activationCutscenes.Count <= 0)
                         this.OnActivated(this.Position.ToPoint() + this.Direction.Offset());

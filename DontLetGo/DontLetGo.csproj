@@ -5,16 +5,20 @@
         <TargetFramework>netcoreapp3.0</TargetFramework>
         <PublishReadyToRun>false</PublishReadyToRun>
         <TieredCompilation>false</TieredCompilation>
+        <AssemblyName>Don't Wake Up</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Contentless" Version="2.0.*" />
+        <PackageReference Include="MLEM" Version="3.3.0-116" />
         <PackageReference Include="MLEM.Extended" Version="3.3.0-114" />
         <PackageReference Include="MLEM.Startup" Version="3.3.0-115" />
+        <PackageReference Include="MLEM.Ui" Version="3.3.0-116" />
         <PackageReference Include="MonoGame.Content.Builder" Version="3.7.*" />
         <PackageReference Include="MonoGame.Extended.Tiled" Version="3.7.0" />
-        <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.*" />
         <PackageReference Include="MonoGame.Penumbra.DesktopGL" Version="1.4.3" />
+        <!--http://teamcity.monogame.net/guestAuth/app/nuget/v1/FeedService.svc/-->
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1231-develop" />
     </ItemGroup>
 
     <ItemGroup>
@@ -22,7 +26,16 @@
         <Content Include="Content\*\**" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <ApplicationIcon>Icon.ico</ApplicationIcon>
+    </PropertyGroup>
     <ItemGroup>
-        <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />
+        <Content Include="Icon.ico" />
+        <EmbeddedResource Include="Icon.bmp">
+            <LogicalName>Icon.bmp</LogicalName>
+        </EmbeddedResource>
+        <Content Include=".itch.toml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 </Project>

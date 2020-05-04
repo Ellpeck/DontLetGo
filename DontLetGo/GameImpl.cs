@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Coroutine;
 using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MLEM.Cameras;
 using MLEM.Extended.Extensions;
 using MLEM.Extended.Tiled;
+using MLEM.Extensions;
 using MLEM.Font;
 using MLEM.Startup;
+using MLEM.Textures;
 using MLEM.Ui;
 using MLEM.Ui.Elements;
 using MonoGame.Extended;
@@ -29,10 +33,12 @@ namespace DontLetGo {
         private PenumbraComponent penumbra;
         private Player player;
         private ActiveCoroutine cutscene;
+        private string savedLevel;
 
         private Group fade;
         private Group caption;
         private Paragraph trigger;
+        private Group mainMenu;
 
         public GameImpl() {
             Instance = this;
@@ -40,6 +46,7 @@ namespace DontLetGo {
 
         protected override void LoadContent() {
             base.LoadContent();
+            this.savedLevel = Load();
 
             this.penumbra = new PenumbraComponent(this) {
                 AmbientColor = new Color(Color.Black, 0.1F)
@@ -55,6 +62,16 @@ namespace DontLetGo {
             this.UiSystem.AutoScaleWithScreen = true;
             this.UiSystem.Style.Font = new GenericSpriteFont(LoadContent<SpriteFont>("Fonts/Font"));
             this.UiSystem.Style.TextScale = 0.3F;
+            this.UiSystem.Style.ButtonTexture = this.SpriteBatch.GenerateTexture(Color.Transparent, Color.Transparent);
+            this.UiSystem.OnSelectedElementDrawn = (e, time, batch, alpha) => {
+                batch.FillRectangle(e.DisplayArea.ToExtended(), ColorExtensions.FromHex(0x493443));
+            };
+            var controls = this.UiSystem.Controls;
+            controls.HandleMouse = controls.HandleTouch = false;
+            UiControls.AddButtons(ref controls.LeftButtons, Keys.Left);
+            UiControls.AddButtons(ref controls.RightButtons, Keys.Right);
+            UiControls.AddButtons(ref controls.UpButtons, Keys.Up);
+            UiControls.AddButtons(ref controls.DownButtons, Keys.Down);
 
             this.fade = new Group(Anchor.TopLeft, Vector2.One, false) {
                 OnDrawn = (e, time, batch, alpha) => {
@@ -66,6 +83,8 @@ namespace DontLetGo {
             this.UiSystem.Add("Caption", this.caption).Priority = 20;
             this.trigger = new Paragraph(Anchor.TopLeft, 1, "", true) {
                 OnUpdated = (e, time) => {
+                    if (this.map == null)
+                        return;
                     var pos = this.player.Position + new Vector2(0.5F, -0.45F);
                     var trans = this.camera.ToCameraPos(pos * this.map.TileSize);
                     trans.X -= e.DisplayArea.Width / 2;
@@ -76,8 +95,38 @@ namespace DontLetGo {
                 TextScale = 0.15F
             };
             this.UiSystem.Add("Trigger", this.trigger);
+            this.mainMenu = new Group(Anchor.TopLeft, Vector2.One, false);
+            this.UiSystem.Add("Menu", this.mainMenu);
+            var center = this.mainMenu.AddChild(new Group(Anchor.Center, Vector2.One));
+            center.AddChild(new Paragraph(Anchor.AutoCenter, 1, "Don't Wake Up", true) {TextScale = 0.6F});
+            center.AddChild(new VerticalSpace(100));
+            center.AddChild(new Button(Anchor.AutoCenter, new Vector2(400, 70), "Start") {
+                Padding = new Vector2(5),
+                OnPressed = e => {
+                    if (this.cutscene != null && !this.cutscene.IsFinished)
+                        return;
+                    this.Fade(0.007F, g => {
+                        this.mainMenu.IsHidden = true;
+                        g.StartMap(Levels[0], g2 => g2.Fade(0.01F));
+                    });
+                }
+            });
+            center.AddChild(new Button(Anchor.AutoCenter, new Vector2(400, 70), "Continue") {
+                Padding = new Vector2(5),
+                OnUpdated = (e, time) => e.IsHidden = this.savedLevel == null,
+                OnPressed = e => {
+                    if (this.cutscene != null && !this.cutscene.IsFinished)
+                        return;
+                    this.Fade(0.007F, g => {
+                        this.mainMenu.IsHidden = true;
+                        this.StartMap(this.savedLevel, g2 => g2.Fade(0.01F));
+                    });
+                }
+            });
+            center.Root.SelectElement(center.GetChildren(c => c.CanBeSelected).First(), true);
+            this.mainMenu.AddChild(new Paragraph(Anchor.BottomLeft, 1, "A small game by Ellpeck") {TextScale = 0.2F, Padding = new Vector2(5)});
 
-            this.StartMap(Levels[6], g => g.Fade(0.01F));
+            this.Fade(0.01F);
         }
 
         public void Fade(float speed, Action<GameImpl> afterFade = null) {
@@ -137,6 +186,7 @@ namespace DontLetGo {
 
         public void StartMap(string name, Action<GameImpl> finished = null) {
             this.SetMap(name);
+            Save(name);
             this.DisplayCaption(this.map.Caption, g => finished?.Invoke(g));
         }
 
@@ -156,12 +206,14 @@ namespace DontLetGo {
         protected override void DoUpdate(GameTime gameTime) {
             base.DoUpdate(gameTime);
 
-            this.camera.LookingPosition = this.player.Position * this.map.TileSize;
-            this.camera.ConstrainWorldBounds(Vector2.Zero, this.map.DrawSize);
-            this.penumbra.Transform = this.camera.ViewMatrix;
+            if (this.map != null) {
+                this.camera.LookingPosition = this.player.Position * this.map.TileSize;
+                this.camera.ConstrainWorldBounds(Vector2.Zero, this.map.DrawSize);
+                this.penumbra.Transform = this.camera.ViewMatrix;
 
-            if (this.cutscene == null || this.cutscene.IsFinished)
-                this.map.Update(gameTime);
+                if (this.cutscene == null || this.cutscene.IsFinished)
+                    this.map.Update(gameTime);
+            }
         }
 
         protected override void DoDraw(GameTime gameTime) {
@@ -169,12 +221,38 @@ namespace DontLetGo {
 
             this.GraphicsDevice.Clear(ColorExtensions.FromHex(0x161214));
 
-            this.SpriteBatch.Begin(SpriteSortMode.FrontToBack, null, SamplerState.PointClamp, null, null, null, this.camera.ViewMatrix);
-            this.map.Draw(this.SpriteBatch, gameTime, this.camera.GetVisibleRectangle().ToExtended());
-            this.SpriteBatch.End();
+            if (this.map != null) {
+                this.SpriteBatch.Begin(SpriteSortMode.FrontToBack, null, SamplerState.PointClamp, null, null, null, this.camera.ViewMatrix);
+                this.map.Draw(this.SpriteBatch, gameTime, this.camera.GetVisibleRectangle().ToExtended());
+                this.SpriteBatch.End();
+            }
 
             this.penumbra.Draw(gameTime);
             base.DoDraw(gameTime);
+        }
+
+        private static string Load() {
+            var file = GetSaveFile();
+            if (!file.Exists)
+                return null;
+            using var stream = file.OpenText();
+            return stream.ReadToEnd();
+        }
+
+        public static void Save(string level) {
+            var file = GetSaveFile();
+            if (file.Exists)
+                file.Delete();
+            using var stream = file.CreateText();
+            stream.Write(level);
+        }
+
+        private static FileInfo GetSaveFile() {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var file = new FileInfo(Path.Combine(appData, "Don't Wake Up", "Save"));
+            if (!file.Directory.Exists)
+                file.Directory.Create();
+            return file;
         }
 
     }
