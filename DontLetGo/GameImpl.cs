@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MLEM.Cameras;
 using MLEM.Extended.Extensions;
+using MLEM.Extended.Tiled;
 using MLEM.Font;
 using MLEM.Startup;
 using MLEM.Ui;
@@ -27,9 +28,11 @@ namespace DontLetGo {
         private Camera camera;
         private PenumbraComponent penumbra;
         private Player player;
+        private ActiveCoroutine cutscene;
+
         private Group fade;
         private Group caption;
-        private ActiveCoroutine cutscene;
+        private Paragraph trigger;
 
         public GameImpl() {
             Instance = this;
@@ -61,6 +64,18 @@ namespace DontLetGo {
             this.UiSystem.Add("Fade", this.fade).Priority = 10;
             this.caption = new Group(Anchor.Center, Vector2.One);
             this.UiSystem.Add("Caption", this.caption).Priority = 20;
+            this.trigger = new Paragraph(Anchor.TopLeft, 1, "", true) {
+                OnUpdated = (e, time) => {
+                    var pos = this.player.Position + new Vector2(0.5F, -0.45F);
+                    var trans = this.camera.ToCameraPos(pos * this.map.TileSize);
+                    trans.X -= e.DisplayArea.Width / 2;
+                    trans.Y -= e.Root.Element.DisplayArea.Height;
+                    e.Root.Transform = Matrix.CreateTranslation(trans.X, trans.Y, 0);
+                },
+                DrawAlpha = 0,
+                TextScale = 0.15F
+            };
+            this.UiSystem.Add("Trigger", this.trigger);
 
             this.StartMap(Levels[0], g => g.Fade(0.01F));
         }
@@ -107,9 +122,25 @@ namespace DontLetGo {
             this.cutscene = CoroutineHandler.Start(CaptionImpl());
         }
 
+        public IEnumerator<IWait> DisplayTrigger(string text) {
+            this.trigger.Text = text;
+            while (this.trigger.DrawAlpha < 1) {
+                this.trigger.DrawAlpha += 0.01F;
+                yield return new WaitEvent(CoroutineEvents.Update);
+            }
+            yield return new WaitSeconds(2);
+            while (this.trigger.DrawAlpha > 0) {
+                this.trigger.DrawAlpha -= 0.01F;
+                yield return new WaitEvent(CoroutineEvents.Update);
+            }
+        }
+
         public void StartMap(string name, Action<GameImpl> finished = null) {
             this.SetMap(name);
-            this.DisplayCaption(this.map.Caption, g => finished?.Invoke(g));
+            this.DisplayCaption(this.map.Caption, g => {
+                this.player.OnWalkedOnto(this.player.Position.ToPoint());
+                finished?.Invoke(g);
+            });
         }
 
         public void SetMap(string name) {

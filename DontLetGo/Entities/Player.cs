@@ -7,10 +7,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MLEM.Animations;
 using MLEM.Extended.Tiled;
+using MLEM.Extensions;
 using MLEM.Misc;
 using MLEM.Startup;
 using MLEM.Textures;
 using MonoGame.Extended;
+using MonoGame.Extended.Tiled;
 using Penumbra;
 
 namespace DontLetGo.Entities {
@@ -123,7 +125,26 @@ namespace DontLetGo.Entities {
             }
         }
 
-        private void OnWalkedOnto(Point pos) {
+        public void OnWalkedOnto(Point pos) {
+            var stuck = Direction2Helper.Adjacent.All(dir => {
+                var offset = pos + dir.Offset();
+                var tile = this.Map.GetTile(offset.X, offset.Y);
+                return tile.IsBlank || !tile.GetTilesetTile(this.Map.Tiles).Properties.GetBool("Walkable");
+            });
+            if (stuck)
+                CoroutineHandler.Start(GameImpl.Instance.DisplayTrigger("R to restart"));
+
+            foreach (var obj in this.Map.Tiles.GetObjects("Trigger", false, true)) {
+                if (obj.Properties.GetBool("Triggered"))
+                    continue;
+                if (!obj.GetArea(this.Map.Tiles).Contains(pos.ToVector2() + new Vector2(0.5F)))
+                    continue;
+                var content = obj.Properties.Get("Content");
+                CoroutineHandler.Start(GameImpl.Instance.DisplayTrigger(content));
+                obj.Properties.Add("Triggered", true.ToString());
+                break;
+            }
+
             foreach (var layer in this.Map.Tiles.TileLayers) {
                 var tile = layer.GetTile(pos.X, pos.Y);
                 if (tile.IsBlank)
