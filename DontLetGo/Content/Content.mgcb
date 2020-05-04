@@ -96,3 +96,13 @@
 /processor:SoundEffectProcessor
 /build:Sounds/Restart.ogg
 
+#begin Tiled/Level8.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:Tiled/Level8.tmx
+
+#begin Tiled/Level9.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:Tiled/Level9.tmx
+

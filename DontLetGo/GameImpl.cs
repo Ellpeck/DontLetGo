@@ -27,7 +27,7 @@ using ColorExtensions = MLEM.Extensions.ColorExtensions;
 namespace DontLetGo {
     public class GameImpl : MlemGame {
 
-        public static readonly string[] Levels = Enumerable.Range(1, 7).Select(i => "Level" + i).ToArray();
+        public static readonly string[] Levels = Enumerable.Range(1, 9).Select(i => "Level" + i).ToArray();
         public static GameImpl Instance { get; private set; }
         private ContentManager mapContent;
         private Map map;
@@ -48,8 +48,6 @@ namespace DontLetGo {
 
         protected override void LoadContent() {
             base.LoadContent();
-            this.savedLevel = Load();
-
             this.penumbra = new PenumbraComponent(this) {
                 AmbientColor = new Color(Color.Black, 0.1F)
             };
@@ -134,8 +132,9 @@ namespace DontLetGo {
             this.Fade(0.01F);
         }
 
-        private void OpenMainMenu() {
+        public void OpenMainMenu() {
             this.mainMenu.IsHidden = false;
+            this.savedLevel = Load();
 
             SoundEffect.MasterVolume = 0.25F;
             MediaPlayer.Volume = 0.25F;
@@ -172,7 +171,7 @@ namespace DontLetGo {
             this.cutscene = CoroutineHandler.Start(FadeImpl());
         }
 
-        private void DisplayCaption(string[] text, Action<GameImpl> afterDisplay = null) {
+        public void DisplayCaption(string[] text, Action<GameImpl> afterDisplay = null) {
             IEnumerator<IWait> CaptionImpl() {
                 foreach (var par in text) {
                     this.caption.RemoveChildren();
@@ -222,13 +221,18 @@ namespace DontLetGo {
             this.penumbra.Hulls.Clear();
             this.penumbra.Lights.Clear();
             this.trigger.DrawAlpha = 0;
-
             this.mapContent.Unload();
-            this.map = new Map(name, this.mapContent.Load<TiledMap>("Tiled/" + name), this.penumbra);
-            this.player = new Player(this.map) {
-                Position = this.map.GetSpawnPoint()
-            };
-            this.map.Entities.Add(this.player);
+
+            if (name != null) {
+                this.map = new Map(name, this.mapContent.Load<TiledMap>("Tiled/" + name), this.penumbra);
+                this.player = new Player(this.map) {
+                    Position = this.map.GetSpawnPoint()
+                };
+                this.map.Entities.Add(this.player);
+            } else {
+                this.map = null;
+                this.player = null;
+            }
         }
 
         protected override void DoUpdate(GameTime gameTime) {
@@ -264,7 +268,8 @@ namespace DontLetGo {
             if (!file.Exists)
                 return null;
             using var stream = file.OpenText();
-            return stream.ReadToEnd();
+            var map = stream.ReadToEnd();
+            return string.IsNullOrWhiteSpace(map) ? null : map;
         }
 
         public static void Save(string level) {

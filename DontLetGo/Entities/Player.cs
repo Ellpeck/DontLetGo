@@ -113,6 +113,7 @@ namespace DontLetGo.Entities {
                     var active = tilesetTile.Properties.GetInt("ActiveState");
                     if (active > 0)
                         this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
+                    MlemGame.LoadContent<SoundEffect>("Sounds/Button").Play();
                 }
             }
         }
@@ -175,12 +176,25 @@ namespace DontLetGo.Entities {
                 if (tilesetTile.Properties.GetBool("Goal")) {
                     this.Direction = Direction2.Down;
                     var nextLevel = Array.IndexOf(GameImpl.Levels, this.Map.Name) + 1;
-                    if (GameImpl.Levels.Length > nextLevel) {
-                        GameImpl.Instance.Fade(0.005F, g => {
+                    GameImpl.Instance.Fade(0.005F, g => {
+                        if (GameImpl.Levels.Length > nextLevel) {
                             g.StartMap(GameImpl.Levels[nextLevel], g2 => g2.Fade(0.01F));
-                        });
-                        MlemGame.LoadContent<SoundEffect>("Sounds/Bed").Play();
-                    }
+                        } else {
+                            g.DisplayCaption(new[] {
+                                "At last,\nI'm not panicking anymore.",
+                                "I know it'll come back eventually,\nbut for now, I'm free."
+                            }, g2 => g2.DisplayCaption(new[] {
+                                "Thanks for playing this game.",
+                                "If you're ever feeling depressed,\nplease reach out to someone."
+                            }, g3 => {
+                                g3.SetMap(null);
+                                GameImpl.Save(null);
+                                g3.OpenMainMenu();
+                                g3.Fade(0.01F);
+                            }));
+                        }
+                    });
+                    MlemGame.LoadContent<SoundEffect>("Sounds/Bed").Play();
                     continue;
                 }
 
@@ -218,7 +232,8 @@ namespace DontLetGo.Entities {
         }
 
         public override void Draw(SpriteBatch batch, GameTime time) {
-            this.light.Scale = this.Map.TileSize * (6 + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
+            var size = 6 + this.Map.Tiles.Properties.GetFloat("LightIncrease");
+            this.light.Scale = this.Map.TileSize * (size + (float) Math.Sin(time.TotalGameTime.TotalSeconds));
             this.light.Position = (this.Position + new Vector2(0.5F)) * this.Map.TileSize;
 
             this.animation.Update(time);
