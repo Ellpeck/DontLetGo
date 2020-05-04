@@ -54,11 +54,4 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="3" name="Triggers">
-  <object id="1" type="Trigger" x="128" y="272" width="48" height="48">
-   <properties>
-    <property name="Content" value="Arrow keys to move"/>
-   </properties>
-  </object>
- </objectgroup>
 </map>

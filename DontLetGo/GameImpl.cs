@@ -137,10 +137,7 @@ namespace DontLetGo {
 
         public void StartMap(string name, Action<GameImpl> finished = null) {
             this.SetMap(name);
-            this.DisplayCaption(this.map.Caption, g => {
-                this.player.OnWalkedOnto(this.player.Position.ToPoint());
-                finished?.Invoke(g);
-            });
+            this.DisplayCaption(this.map.Caption, g => finished?.Invoke(g));
         }
 
         public void SetMap(string name) {
