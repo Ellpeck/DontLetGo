@@ -71,3 +71,8 @@
 /processor:TiledMapProcessor
 /build:Tiled/Level6.tmx
 
+#begin Tiled/Level7.tmx
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
+/build:Tiled/Level7.tmx
+
