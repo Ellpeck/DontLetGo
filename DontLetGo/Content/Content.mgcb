@@ -76,3 +76,23 @@
 /processor:TiledMapProcessor
 /build:Tiled/Level7.tmx
 
+#begin Music/MenuTheme.wav
+/importer:WavImporter
+/processor:SongProcessor
+/build:Music/MenuTheme.wav
+
+#begin Sounds/Bed.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:Sounds/Bed.ogg
+
+#begin Sounds/Button.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:Sounds/Button.ogg
+
+#begin Sounds/Restart.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/build:Sounds/Restart.ogg
+

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Coroutine;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MLEM.Animations;
@@ -48,6 +49,7 @@ namespace DontLetGo.Entities {
 
         public override void Update(GameTime time) {
             if (MlemGame.Input.IsAnyPressed(Keys.R, Buttons.Start)) {
+                MlemGame.LoadContent<SoundEffect>("Sounds/Restart").Play();
                 GameImpl.Instance.Fade(0.01F, g => {
                     g.SetMap(this.Map.Name);
                     g.Fade(0.01F);
@@ -165,6 +167,7 @@ namespace DontLetGo.Entities {
                     var active = tilesetTile.Properties.GetInt("ActiveState");
                     if (active > 0)
                         this.Map.SetTile(pos.X, pos.Y, active, layer.Name);
+                    MlemGame.LoadContent<SoundEffect>("Sounds/Button").Play();
                     continue;
                 }
 
@@ -176,6 +179,7 @@ namespace DontLetGo.Entities {
                         GameImpl.Instance.Fade(0.005F, g => {
                             g.StartMap(GameImpl.Levels[nextLevel], g2 => g2.Fade(0.01F));
                         });
+                        MlemGame.LoadContent<SoundEffect>("Sounds/Bed").Play();
                     }
                     continue;
                 }
@@ -204,6 +208,7 @@ namespace DontLetGo.Entities {
                                     continue;
                                 CoroutineHandler.Start(this.Map.AddLayerToGround(other));
                                 other.Properties["Activated"] = true.ToString();
+                                MlemGame.LoadContent<SoundEffect>("Sounds/Button").Play();
                                 break;
                             }
                         }

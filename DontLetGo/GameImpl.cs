@@ -5,9 +5,11 @@ using System.Linq;
 using Coroutine;
 using DontLetGo.Entities;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using MLEM.Cameras;
 using MLEM.Extended.Extensions;
 using MLEM.Extended.Tiled;
@@ -106,8 +108,9 @@ namespace DontLetGo {
                     if (this.cutscene != null && !this.cutscene.IsFinished)
                         return;
                     this.Fade(0.007F, g => {
-                        this.mainMenu.IsHidden = true;
-                        g.StartMap(Levels[0], g2 => g2.Fade(0.01F));
+                        this.CloseMainMenu(g2 => {
+                            g2.StartMap(Levels[0], g3 => g3.Fade(0.01F));
+                        });
                     });
                 }
             });
@@ -118,15 +121,40 @@ namespace DontLetGo {
                     if (this.cutscene != null && !this.cutscene.IsFinished)
                         return;
                     this.Fade(0.007F, g => {
-                        this.mainMenu.IsHidden = true;
-                        this.StartMap(this.savedLevel, g2 => g2.Fade(0.01F));
+                        this.CloseMainMenu(g2 => {
+                            this.StartMap(this.savedLevel, g3 => g3.Fade(0.01F));
+                        });
                     });
                 }
             });
             center.Root.SelectElement(center.GetChildren(c => c.CanBeSelected).First(), true);
             this.mainMenu.AddChild(new Paragraph(Anchor.BottomLeft, 1, "A small game by Ellpeck") {TextScale = 0.2F, Padding = new Vector2(5)});
 
+            this.OpenMainMenu();
             this.Fade(0.01F);
+        }
+
+        private void OpenMainMenu() {
+            this.mainMenu.IsHidden = false;
+
+            SoundEffect.MasterVolume = 0.25F;
+            MediaPlayer.Volume = 0.25F;
+            MediaPlayer.IsRepeating = true;
+            MediaPlayer.Play(LoadContent<Song>("Music/MenuTheme"));
+        }
+
+        private void CloseMainMenu(Action<GameImpl> after = null) {
+            this.mainMenu.IsHidden = true;
+
+            IEnumerator<IWait> FadeMusic() {
+                while (MediaPlayer.Volume > 0) {
+                    MediaPlayer.Volume -= 0.007F;
+                    yield return new WaitEvent(CoroutineEvents.Update);
+                }
+                after?.Invoke(this);
+            }
+
+            CoroutineHandler.Start(FadeMusic());
         }
 
         public void Fade(float speed, Action<GameImpl> afterFade = null) {

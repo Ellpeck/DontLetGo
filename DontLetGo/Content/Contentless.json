@@ -3,5 +3,9 @@
         "obj/",
         "bin/",
         "Palettes/"
-    ]
+    ],
+    "overrides": {
+        "Sounds/": [null, "SoundEffectProcessor"],
+        "Music/": [null, "SongProcessor"]
+    }
 }
